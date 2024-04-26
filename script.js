@@ -1,135 +1,88 @@
 // GAME VARIABLES AND CONSTANTS
 
-// I need the left position of gamespace, and the right border for spawns
-// I need the score
-const RIGHT_BORDER = 600
-const LEFT_BORDER = 0
-const OBJECT_WIDTH = 30
-const COLLIDING_AREA = 70
+const SPAWN_POSITION = 580
+const DESPAWN_POSITION = 0
+const OBSTACLE_WIDTH = 20
 let gameSpace = document.getElementById('gameSpace')
 let scoreDisplay = document.getElementById('score')
+let scoreScreen = document.getElementById('scoreScreen')
+let dinosaur = document.getElementById('dinosaur')
+document.addEventListener('keydown', keyPressed)
 let isPaused = true
 let inAction = false
 let scoreValue = 0
-let obstacleWidth = 20
-let dinosaur = document.createElement('div')
-dinosaur.style.top = '100px'
-dinosaur.style.left = '40px'
-dinosaur.style.height = '50px'
-dinosaur.style.width = '30px'
-dinosaur.id = 'dinosaur'
-gameSpace.appendChild(dinosaur)
-dinosaur = document.getElementById('dinosaur')
 let dinoLeft = 40
+
+// GAME STATES - START / GAMEOVER
+
+document.addEventListener("visibilitychange", gameOver)
+
+function startGame() {
+    obstacleSpawnId = setInterval(createObstacle, 1000)
+    obstacleMoveId = setInterval(moveObstacle, 30)
+    document.addEventListener('keydown', keyPressed)
+    isPaused = false
+}
+
+function gameOver() {
+    clearInterval(obstacleMoveId)
+    clearInterval(obstacleSpawnId)
+    document.removeEventListener('keydown', keyPressed)
+    isPaused = true
+    scoreDisplay.innerHTML = `GAME OVER ! Your final score: ${scoreValue.toFixed(0)}`
+    let restart = document.createElement('button')
+    restart.innerHTML = 'Restart'
+    restart.onclick = restartGame
+    scoreScreen.appendChild(restart)
+    
+}
+
+function restartGame() {
+    location.reload()
+}
+
 // OBSTACLE CREATION
 
 function createObstacle() {
-    // let random = Math.floor(Math.random() * 3) + 1 
+    let random = Math.floor(Math.random() * 3) + 1 
     let obstacle = document.createElement('div')
     obstacle.classList.add('obstacle');
-    // if (random === 1) {
-        obstacle.style.left = '580px'
+    if (random === 1) {
         obstacle.style.top = '110px'
         obstacle.style.height = '40px'
-    // } else if (random === 2) {
-    //     obstacle.style.left = '580px'
-    //     obstacle.style.top = '130px'
-    //     obstacle.style.height = '20px'
-    // } else {
-    //     obstacle.style.left = '580px'
-    //     obstacle.style.top = '90px'
-    //     obstacle.style.height = '20px'
-    // }
-    // obstacle.id = `${(Math.random() * 30).toFixed(3)}`;
+    } else if (random === 2) {
+        obstacle.style.top = '130px'
+        obstacle.style.height = '20px'
+    } else {
+        obstacle.style.top = '90px'
+        obstacle.style.height = '20px'
+    }
+    obstacle.style.left = '580px';
+    obstacle.id = `${(Math.random() * 30).toFixed(5)}`;
     gameSpace.appendChild(obstacle);
 }
 
 // GAME UPDATE - MOVEMENT AND COLLISION
 
-function jump() {
-    setTimeout(function () { dinosaur.style.top = '90px'; }, 10);
-    setTimeout(function () { dinosaur.style.top = '80px'; }, 40);
-    setTimeout(function () { dinosaur.style.top = '60px'; }, 70);
-    setTimeout(function () { dinosaur.style.top = '40px'; }, 100);
-    setTimeout(function () { dinosaur.style.top = '60px'; }, 870);
-    setTimeout(function () { dinosaur.style.top = '80px'; }, 900);
-    setTimeout(function () { dinosaur.style.top = '90px'; }, 930);
-    setTimeout(function () { dinosaur.style.top = '100px'; inAction = false }, 960);
-}
-
-function sneak() {
-    setTimeout(function () {dinosaur.style.top = '125px'; dinosaur.style.height = '25px';
-                            dinosaur.style.width = '40px' }, 10);
-    setTimeout(function () {dinosaur.style.top = '100px'; dinosaur.style.height = '50px';
-                            dinosaur.style.width = '30px'; inAction = false }, 700);
-}
-// function that checks if an object collides with the dinosau
-
-// GAME STATES - PAUSE / GAMEOVER / START
-
-// I need a pause which pauses the intervals and stops keydown listeners, and the score
-// the gameover function that pauses the game and shows score
-function pauseGame() {
-    if (!isPaused) {
-        clearInterval(obstacleMoveId)
-        clearInterval(obstacleSpawnId)
-        document.removeEventListener('keydown', keyPressed)
-        isPaused = true
-    } else {
-        obstacleSpawnId = setInterval(createObstacle, 1000)
-        obstacleMoveId = setInterval(moveObstacle, 30)
-        document.addEventListener('keydown', keyPressed)
-        isPaused = false
-    }
-}
-
-function pauseTheGame() {
-    clearInterval(obstacleMoveId)
-        clearInterval(obstacleSpawnId)
-        document.removeEventListener('keydown', keyPressed)
-        isPaused = true
-}
-
-function startGame() {
-    // the dinosaur is created and setinterval for obstacles and addeventlistener
-    
-    pauseGame()
-}
-
-document.addEventListener("visibilitychange", pauseTheGame)
-
-// pauseTheGame() {
-//     if (document.visibilityState == 'hidden' && !isPaused) {
-
-//     }
-// }
-
-function keyPressed(e) {
-    e.preventDefault()
-    if (e.key == 'ArrowUp' && inAction == false) {
-        jump()
-        inAction = true
-    }
-    if (e.key == 'ArrowDown' && inAction == false) {
-        sneak()
-        inAction = true
-    }
-}
-
 function moveObstacle() {
-    let dinoTop = parseInt(dinosaur.style.top)
-    let dinoBottom = parseInt(dinosaur.style.top) + parseInt(dinosaur.style.height)
-    let dinoRight = dinoLeft + parseInt(dinosaur.style.width)
     let obstacles = document.querySelectorAll('.obstacle')
+    let dinoTop = dinosaur.style.top.slice(0, -2)
+    dinoTop = Number(dinoTop)
+    let dinoBottom = dinosaur.style.height.slice(0, -2)
+    dinoBottom = dinoTop + Number(dinoBottom)
+    let dinoRight = dinosaur.style.width.slice(0, -2)
+    dinoRight = dinoLeft + Number(dinoRight)
     obstacles.forEach(function(obstacle) {
-        let obstacleLeft = parseInt(obstacle.style.left)
-        let obstacleTop = parseInt(obstacle.style.top)
-        let obstacleRight = obstacleLeft + parseInt(obstacle.style.width)
-        let obstacleBottom = obstacleTop + parseInt(obstacle.style.height)
+        let obstacleLeft = obstacle.style.left.slice(0, -2)
+        obstacleLeft = Number(obstacleLeft)
+        let obstacleTop = obstacle.style.top.slice(0, -2)
+        obstacleTop = Number(obstacleTop)
+        let obstacleRight = obstacleLeft + 20
+        let obstacleBottom = obstacle.style.height.slice(0, -2)
+        obstacleBottom = obstacleTop + Number(obstacleBottom)
         if (obstacleLeft <= dinoRight && obstacleRight >= dinoLeft &&
-            obstacleBottom <= dinoTop && obstacleTop >= dinoBottom) {
-            console.log('hit')
-            console.log('gameOver');
+            obstacleTop <= dinoBottom && obstacleBottom >= dinoTop) {
+            gameOver()
         }
         if (obstacleLeft > 0) {
             obstacleLeft -= 5
@@ -144,3 +97,38 @@ function moveObstacle() {
     });
 }
 
+function keyPressed(e) {
+    e.preventDefault()
+    if (e.key == 'ArrowUp' && inAction == false) {
+        jump()
+        inAction = true
+    }
+    if (e.key == 'ArrowDown' && inAction == false) {
+        sneak()
+        inAction = true
+    }
+}
+
+function jump() {
+    if (isPaused) {
+        dinosaur.style.height = '50px'
+        dinosaur.style.width = '30px'
+        startGame()
+    }
+    dinosaur.style.top = '90px'
+    setTimeout(function () { dinosaur.style.top = '80px'; }, 30);
+    setTimeout(function () { dinosaur.style.top = '60px'; }, 60);
+    setTimeout(function () { dinosaur.style.top = '40px'; }, 90);
+    setTimeout(function () { dinosaur.style.top = '60px'; }, 840);
+    setTimeout(function () { dinosaur.style.top = '80px'; }, 870);
+    setTimeout(function () { dinosaur.style.top = '90px'; }, 900);
+    setTimeout(function () { dinosaur.style.top = '100px'; inAction = false }, 930);
+}
+
+function sneak() {
+    dinosaur.style.top = '125px'
+    dinosaur.style.height = '25px'
+    dinosaur.style.width = '40px'
+    setTimeout(function () {dinosaur.style.top = '100px'; dinosaur.style.height = '50px';
+                            dinosaur.style.width = '30px'; inAction = false }, 700);
+}
