@@ -6,16 +6,22 @@ const OBSTACLE_WIDTH = 20
 let gameSpace = document.getElementById('gameSpace')
 let scoreDisplay = document.getElementById('score')
 let scoreScreen = document.getElementById('scoreScreen')
-let dinosaur = document.getElementById('dinosaur')
+let dino = document.getElementById('dinosaur')
 document.addEventListener('keydown', keyPressed)
-let isPaused = true
-let inAction = false
+document.addEventListener('keyup', keyUnpressed)
+let isJumping = false
+let sneaking = false
 let scoreValue = 0
 let dinoLeft = 40
+let isPaused = true
+let jumpInterval
+let jumpHeight = 0
+let obstacleMoveId
+resetDino()
 
 // GAME STATES - START / GAMEOVER
 
-document.addEventListener("visibilitychange", gameOver)
+let changedTab = document.addEventListener('visibilitychange', gameOver)
 
 function startGame() {
     obstacleSpawnId = setInterval(createObstacle, 1000)
@@ -27,6 +33,7 @@ function startGame() {
 function gameOver() {
     clearInterval(obstacleMoveId)
     clearInterval(obstacleSpawnId)
+    document.removeEventListener('visibilitychange', gameOver)
     document.removeEventListener('keydown', keyPressed)
     isPaused = true
     scoreDisplay.innerHTML = `GAME OVER ! Your final score: ${scoreValue.toFixed(0)}`
@@ -34,7 +41,6 @@ function gameOver() {
     restart.innerHTML = 'Restart'
     restart.onclick = restartGame
     scoreScreen.appendChild(restart)
-    
 }
 
 function restartGame() {
@@ -44,9 +50,9 @@ function restartGame() {
 // OBSTACLE CREATION
 
 function createObstacle() {
-    let random = Math.floor(Math.random() * 3) + 1 
+    let random = Math.floor(Math.random() * 3) + 1
     let obstacle = document.createElement('div')
-    obstacle.classList.add('obstacle');
+    obstacle.classList.add('obstacle')
     if (random === 1) {
         obstacle.style.top = '110px'
         obstacle.style.height = '40px'
@@ -57,20 +63,20 @@ function createObstacle() {
         obstacle.style.top = '90px'
         obstacle.style.height = '20px'
     }
-    obstacle.style.left = '580px';
-    obstacle.id = `${(Math.random() * 30).toFixed(5)}`;
-    gameSpace.appendChild(obstacle);
+    obstacle.style.left = '580px'
+    obstacle.id = `${(Math.random() * 30).toFixed(5)}`
+    gameSpace.appendChild(obstacle)
 }
 
 // GAME UPDATE - MOVEMENT AND COLLISION
 
 function moveObstacle() {
     let obstacles = document.querySelectorAll('.obstacle')
-    let dinoTop = dinosaur.style.top.slice(0, -2)
+    let dinoTop = dino.style.top.slice(0, -2)
     dinoTop = Number(dinoTop)
-    let dinoBottom = dinosaur.style.height.slice(0, -2)
+    let dinoBottom = dino.style.height.slice(0, -2)
     dinoBottom = dinoTop + Number(dinoBottom)
-    let dinoRight = dinosaur.style.width.slice(0, -2)
+    let dinoRight = dino.style.width.slice(0, -2)
     dinoRight = dinoLeft + Number(dinoRight)
     obstacles.forEach(function(obstacle) {
         let obstacleLeft = obstacle.style.left.slice(0, -2)
@@ -90,45 +96,75 @@ function moveObstacle() {
         } else {
             obstacle.remove()
         }
-        if (!isPaused){
-            scoreValue += 0.5
-            scoreDisplay.innerHTML = `Score: ${scoreValue.toFixed(0)}`
-        }
-    });
+        scoreValue += 0.5
+        scoreDisplay.innerHTML = `Score: ${scoreValue.toFixed(0)}`
+    })
 }
 
 function keyPressed(e) {
     e.preventDefault()
-    if (e.key == 'ArrowUp' && inAction == false) {
+    if (!isJumping && e.key === 'ArrowUp' && parseInt(dino.style.top) >= 100) {
+        isJumping = true
         jump()
-        inAction = true
     }
-    if (e.key == 'ArrowDown' && inAction == false) {
+    if (e.key === 'ArrowDown' && !sneaking) {
+        sneaking = true
         sneak()
-        inAction = true
+    }
+}
+
+function keyUnpressed(e) {
+    e.preventDefault()
+    if (e.key === 'ArrowUp') {
+        clearInterval(jumpInterval)
+        startGravity()
+        isJumping = false
+    }
+    if (e.key === 'ArrowDown') {
+        sneaking = false
+        resetDino()
     }
 }
 
 function jump() {
     if (isPaused) {
-        dinosaur.style.height = '50px'
-        dinosaur.style.width = '30px'
         startGame()
     }
-    dinosaur.style.top = '90px'
-    setTimeout(function () { dinosaur.style.top = '80px'; }, 30);
-    setTimeout(function () { dinosaur.style.top = '60px'; }, 60);
-    setTimeout(function () { dinosaur.style.top = '40px'; }, 90);
-    setTimeout(function () { dinosaur.style.top = '60px'; }, 840);
-    setTimeout(function () { dinosaur.style.top = '80px'; }, 870);
-    setTimeout(function () { dinosaur.style.top = '90px'; }, 900);
-    setTimeout(function () { dinosaur.style.top = '100px'; inAction = false }, 930);
+    jumpInterval = setInterval(function() {
+        if (jumpHeight < 60) {
+            let dinoTop = parseInt(dino.style.top)
+            dinoTop -= 5
+            dino.style.top = `${dinoTop}px`
+            jumpHeight += 5
+        } else {
+            clearInterval(jumpInterval)
+            startGravity()
+            jumpHeight = 0
+        }
+    }, 20)
+}
+
+function startGravity() {
+    const gravityInterval = setInterval(function() {
+        let dinoTop = parseInt(dino.style.top)
+        if (!isJumping && dinoTop < 100) {
+            dinoTop += 2.5
+            dino.style.top = `${dinoTop}px`
+        } else {
+            clearInterval(gravityInterval)
+            jumpHeight = 0
+        }
+    }, 10)
 }
 
 function sneak() {
-    dinosaur.style.top = '125px'
-    dinosaur.style.height = '25px'
-    dinosaur.style.width = '40px'
-    setTimeout(function () {dinosaur.style.top = '100px'; dinosaur.style.height = '50px';
-                            dinosaur.style.width = '30px'; inAction = false }, 700);
+    dino.style.height = '30px'
+    dino.style.width = '45px'
+    dino.style.top = '120px'
+}
+
+function resetDino() {
+    dino.style.top = '100px'
+    dino.style.height = '50px'
+    dino.style.width = '30px'
 }
