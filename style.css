@@ -19,18 +19,45 @@
     position: absolute;
     border: solid black 1px;
     background-color: gray;
-    top: 100px;
     left: 40px;
-    height: 50px;
-    width: 30px;
 }
 
-.obstacle{
+.obstacle {
     position: absolute;
     width: 20px;
     background-color: black;
 }
 
+.obstacle1 {
+    top: 110px;
+    height: 40px;
+    left: 580px;
+}
+
+.obstacle2 {
+    top: 130px;
+    height: 20px;
+    left: 580px;
+}
+
+.obstacle3 {
+    top: 90px;
+    height: 20px;
+    left: 580px;
+}
+
 #score {
     margin-left: 20px;
+}
+
+.sneak {
+    height: 30px;
+    width: 45px;
+    top: 120px;
+}
+
+.default {
+    top: 100px;
+    height: 50px;
+    width: 30px;
 }
