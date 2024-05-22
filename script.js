@@ -3,6 +3,14 @@
 const SPAWN_POSITION = 580;
 const OBSTACLE_WIDTH = 20;
 const ANIMATION_DIFF = 30;
+const JUMP_DELAY = 100;
+const DIFFICULTY_INTERVAL = 3000;
+const UPDATE_INTERVAL = 10;
+const OBSTACLE_TYPES = 3;
+const ANIMATION_SPEED = 4;
+const SCORE_INCREASE = 0.2;
+const MIN_DIFFICULTY = 0.5;
+const DIFFICULTY_DECREASE = 0.05;
 let gameSpace = document.getElementById('gameSpace');
 let scoreDisplay = document.getElementById('score');
 let scoreScreen = document.getElementById('scoreScreen');
@@ -27,9 +35,10 @@ let scoreValue = 0;
 function startGame() {
     document.addEventListener('visibilitychange', gameOver);
     createObstacle();
-    scoreId = setInterval(increaseScore, (scoreMultiplier * difficultySpike).toFixed(0));
-    checkCollisionId = setInterval(checkCollision, 10);
-    difficultyId = setInterval(increaseDifficulty, 3000);
+    scoreId = setInterval(increaseScore, 
+              (scoreMultiplier * difficultySpike).toFixed(0));
+    checkCollisionId = setInterval(checkCollision, UPDATE_INTERVAL);
+    difficultyId = setInterval(increaseDifficulty, DIFFICULTY_INTERVAL);
     isPaused = false;
     dino.classList.add('default');
 }
@@ -45,9 +54,10 @@ function gameOver() {
     document.removeEventListener('visibilitychange', gameOver);
     document.removeEventListener('keydown', keyPressed);
     isPaused = true;
-    scoreDisplay.innerHTML = `GAME OVER ! Your final score: ${scoreValue.toFixed(0)}`;
+    scoreDisplay.innerText = `GAME OVER ! Your final score: ` +
+                             `${scoreValue.toFixed(0)}`;
     let restart = document.createElement('button');
-    restart.innerHTML = 'Restart';
+    restart.innerText = 'Restart';
     restart.onclick = restartGame;
     scoreScreen.appendChild(restart);
 }
@@ -59,21 +69,23 @@ function restartGame() {
 // Game logic and updates
 
 function createObstacle() {
-    let random = Math.floor(Math.random() * 3) + 1;
+    let random = Math.floor(Math.random() * OBSTACLE_TYPES) + 1;
     let obstacle = document.createElement('div');
     obstacle.classList.add(`obstacle${random}`);
     currentType = random;
     obstacle.id = 'obstacle';
-    obstacle.style.animation = `move ${difficultySpike * 4}s linear infinite`;
+    obstacle.style.animation = `move ${difficultySpike * ANIMATION_SPEED}s `+
+                               `linear infinite`;
     gameSpace.appendChild(obstacle);
     obstacle.addEventListener('animationiteration', function() {
         obstacle.style.animation = 'none';
-        random = Math.floor(Math.random() * 3) + 1;
+        random = Math.floor(Math.random() * OBSTACLE_TYPES) + 1;
         obstacle.classList.remove(`obstacle${currentType}`);
         obstacle.classList.add(`obstacle${random}`);
         currentType = random;
         void obstacle.offsetWidth;
-        obstacle.style.animation = `move ${difficultySpike * 4}s linear infinite`;
+        obstacle.style.animation = `move ${difficultySpike * ANIMATION_SPEED}`+
+                                   `s linear infinite`;
     });
 }
 
@@ -90,15 +102,16 @@ function checkCollision() {
 }
 
 function increaseScore() {
-    scoreValue += 0.2;
+    scoreValue += SCORE_INCREASE;
     scoreDisplay.textContent = `Score : ${scoreValue.toFixed(0)}`;
 }
 
 function increaseDifficulty() {
-    if (difficultySpike > 0.5) {
-        difficultySpike -= 0.05;
+    if (difficultySpike > MIN_DIFFICULTY) {
+        difficultySpike -= DIFFICULTY_DECREASE;
         clearInterval(scoreId);
-        scoreId = setInterval(increaseScore, (scoreMultiplier * difficultySpike).toFixed(0));
+        scoreId = setInterval(increaseScore, 
+                  (scoreMultiplier * difficultySpike).toFixed(0));
     }
 }
 
@@ -133,7 +146,7 @@ function jump() {
     dino.style.animation = 'none';
     setTimeout(() => {
         dino.style.animation = 'jump 1s ease';
-    }, 100);
+    }, JUMP_DELAY);
     setTimeout(() => {
         isJumping = false;
     }, 500);
